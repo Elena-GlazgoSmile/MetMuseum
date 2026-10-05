@@ -1,4 +1,4 @@
-package ru.glazgosmile.metmuseum.data.model
+package ru.glazgosmile.metmuseum.domain.model
 
 data class Artwork(
     val objectID: Int,

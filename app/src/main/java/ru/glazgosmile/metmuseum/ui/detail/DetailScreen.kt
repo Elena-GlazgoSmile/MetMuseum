@@ -9,25 +9,32 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import ru.glazgosmile.metmuseum.R
-import ru.glazgosmile.metmuseum.data.model.Artwork
-@OptIn(ExperimentalMaterial3Api::class)
+import ru.glazgosmile.metmuseum.domain.model.Artwork
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DetailScreen(
     objectID: Int,
     onBackClick: () -> Unit,
     viewModel: DetailViewModel = viewModel()
 ) {
-    val artwork: Artwork? = viewModel.getArtwork(objectID)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
+
+    LaunchedEffect(objectID) {
+        viewModel.loadArtwork(objectID)
+    }
 
     Scaffold(
         topBar = {
@@ -42,15 +49,15 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    if (artwork != null) {
+                    if (uiState is DetailUiState.Success) {
                         IconButton(onClick = { viewModel.toggleFavorite(objectID) }) {
                             Icon(
-                                imageVector = if (viewModel.isFavorite)
+                                imageVector = if (isFavorite)
                                     Icons.Default.Favorite
                                 else
                                     Icons.Default.FavoriteBorder,
                                 contentDescription = "В избранное",
-                                tint = if (viewModel.isFavorite)
+                                tint = if (isFavorite)
                                     MaterialTheme.colorScheme.error
                                 else
                                     MaterialTheme.colorScheme.onSurface
@@ -61,71 +68,104 @@ fun DetailScreen(
             )
         }
     ) { padding ->
-        if (artwork == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Экспонат не найден")
-            }
-            return@Scaffold
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            AsyncImage(
-                model = artwork.primaryImage,
-                contentDescription = artwork.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = R.drawable.seras),
-                error = painterResource(id = R.drawable.seras)
-            )
-
-            ArtworkHeader(artwork = artwork)
-
-            ArtworkChips(artwork = artwork)
-
-            Column(modifier = Modifier.padding(16.dp)) {
-                DetailRow("Отдел", artwork.department)
-                DetailRow("Культура", artwork.culture)
-                DetailRow("Страна", artwork.country)
-                DetailRow("Классификация", artwork.classification)
-                DetailRow("Материал", artwork.medium)
-                DetailRow("Размеры", artwork.dimensions)
-                DetailRow("Поступление", artwork.creditLine)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { viewModel.toggleFavorite(objectID) },
-                    modifier = Modifier.fillMaxWidth()
+        when (val state = uiState) {
+            is DetailUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = if (viewModel.isFavorite)
-                            Icons.Default.Favorite
-                        else
-                            Icons.Default.FavoriteBorder,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (viewModel.isFavorite)
-                            "Убрать из избранного"
-                        else
-                            "Добавить в избранное"
-                    )
+                    CircularProgressIndicator()
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            is DetailUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Text(
+                            text = "Ошибка загрузки",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = state.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.loadArtwork(objectID) }) {
+                            Text("Повторить")
+                        }
+                    }
+                }
+            }
+
+            is DetailUiState.Success -> {
+                val artwork = state.artwork
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    AsyncImage(
+                        model = artwork.primaryImage.ifBlank { artwork.primaryImageSmall },
+                        contentDescription = artwork.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    ArtworkHeader(artwork = artwork)
+
+                    ArtworkChips(artwork = artwork)
+
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        DetailRow("Отдел", artwork.department)
+                        DetailRow("Культура", artwork.culture)
+                        DetailRow("Страна", artwork.country)
+                        DetailRow("Классификация", artwork.classification)
+                        DetailRow("Материал", artwork.medium)
+                        DetailRow("Размеры", artwork.dimensions)
+                        DetailRow("Поступление", artwork.creditLine)
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = { viewModel.toggleFavorite(objectID) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite)
+                                    Icons.Default.Favorite
+                                else
+                                    Icons.Default.FavoriteBorder,
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isFavorite)
+                                    "Убрать из избранного"
+                                else
+                                    "Добавить в избранное"
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             }
         }
     }
@@ -149,13 +189,11 @@ fun ArtworkHeader(artwork: Artwork) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
                 },
-            contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.seras),
-            error = painterResource(id = R.drawable.seras)
+            contentScale = ContentScale.Crop
         )
 
         Text(
-            text = artwork.title,
+            text = artwork.title.ifBlank { "Без названия" },
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
@@ -167,7 +205,7 @@ fun ArtworkHeader(artwork: Artwork) {
         )
 
         Text(
-            text = artwork.artistDisplayName,
+            text = artwork.artistDisplayName.ifBlank { "Неизвестный автор" },
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             maxLines = 1,
@@ -206,7 +244,7 @@ fun ArtworkHeader(artwork: Artwork) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ArtworkChips(artwork: Artwork) {
     FlowRow(
@@ -216,12 +254,6 @@ fun ArtworkChips(artwork: Artwork) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (artwork.isPublicDomainSafe()) {
-            AssistChip(
-                onClick = { },
-                label = { Text("Public Domain") }
-            )
-        }
         if (artwork.department.isNotBlank()) {
             AssistChip(
                 onClick = { },
@@ -240,10 +272,14 @@ fun ArtworkChips(artwork: Artwork) {
                 label = { Text(artwork.country) }
             )
         }
+        if (artwork.medium.isNotBlank()) {
+            AssistChip(
+                onClick = { },
+                label = { Text(artwork.medium.take(30)) }
+            )
+        }
     }
 }
-
-private fun Artwork.isPublicDomainSafe(): Boolean = true
 
 @Composable
 fun DetailRow(label: String, value: String) {

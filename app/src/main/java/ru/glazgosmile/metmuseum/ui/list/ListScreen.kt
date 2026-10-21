@@ -21,11 +21,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.glazgosmile.metmuseum.domain.model.Artwork
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun ListScreen(
     onArtworkClick: (Int) -> Unit,
-    viewModel: ListViewModel = viewModel()
+    viewModel: ListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentQuery by viewModel.query.collectAsStateWithLifecycle()

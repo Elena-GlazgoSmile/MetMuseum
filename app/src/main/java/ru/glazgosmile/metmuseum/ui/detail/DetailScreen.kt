@@ -21,13 +21,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.glazgosmile.metmuseum.domain.model.Artwork
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DetailScreen(
     objectID: Int,
     onBackClick: () -> Unit,
-    viewModel: DetailViewModel = viewModel()
+    viewModel: DetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
@@ -49,8 +50,9 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    if (uiState is DetailUiState.Success) {
-                        IconButton(onClick = { viewModel.toggleFavorite(objectID) }) {
+                    val state = uiState
+                    if (state is DetailUiState.Success) {
+                        IconButton(onClick = { viewModel.toggleFavorite(state.artwork) }) {
                             Icon(
                                 imageVector = if (isFavorite)
                                     Icons.Default.Favorite
@@ -144,7 +146,7 @@ fun DetailScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = { viewModel.toggleFavorite(objectID) },
+                            onClick = { viewModel.toggleFavorite(artwork) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(

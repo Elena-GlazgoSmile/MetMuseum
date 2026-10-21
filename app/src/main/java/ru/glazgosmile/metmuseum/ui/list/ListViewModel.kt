@@ -2,31 +2,46 @@ package ru.glazgosmile.metmuseum.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import ru.glazgosmile.metmuseum.data.remote.NetworkModule
-import ru.glazgosmile.metmuseum.data.repository.ArtworkRepositoryImpl
+import ru.glazgosmile.metmuseum.data.local.SettingsRepositoryImpl
 import ru.glazgosmile.metmuseum.domain.usecase.GetArtworksUseCase
+import javax.inject.Inject
 
-class ListViewModel : ViewModel() {
-
-    private val repository = ArtworkRepositoryImpl(NetworkModule.artworkApi)
-    private val getArtworksUseCase = GetArtworksUseCase(repository)
+@HiltViewModel
+class ListViewModel @Inject constructor(
+    private val getArtworksUseCase: GetArtworksUseCase,
+    private val settingsRepository: SettingsRepositoryImpl
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ListUiState>(ListUiState.Loading)
     val uiState: StateFlow<ListUiState> = _uiState.asStateFlow()
 
-    private val _query = MutableStateFlow("painting")
-    val query: StateFlow<String> = _query.asStateFlow()
+    val query: StateFlow<String> = settingsRepository.queryFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "painting")
 
     init {
-        search(_query.value)
+        viewModelScope.launch {
+            combine(
+                settingsRepository.queryFlow,
+                settingsRepository.hasImagesFlow
+            ) { query, hasImages ->
+                Pair(query, hasImages)
+            }.collect { (query, hasImages) ->
+                executeSearch(query)
+            }
+        }
     }
 
     fun search(query: String) {
-        _query.value = query
+        viewModelScope.launch {
+            val currentHasImages = settingsRepository.hasImagesFlow.first()
+            settingsRepository.saveSettings(query, currentHasImages)
+        }
+    }
+
+    private fun executeSearch(query: String) {
         viewModelScope.launch {
             _uiState.value = ListUiState.Loading
             try {
@@ -39,6 +54,7 @@ class ListViewModel : ViewModel() {
     }
 
     fun retry() {
-        search(_query.value)
+        val currentQuery = query.value
+        executeSearch(currentQuery)
     }
 }

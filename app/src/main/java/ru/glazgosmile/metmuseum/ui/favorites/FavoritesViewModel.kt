@@ -11,15 +11,15 @@ import kotlinx.coroutines.launch
 import ru.glazgosmile.metmuseum.data.local.FavoriteDao
 import ru.glazgosmile.metmuseum.data.local.entity.toDomain
 import ru.glazgosmile.metmuseum.domain.model.Artwork
+import ru.glazgosmile.metmuseum.domain.repository.FavoritesRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
-    private val favoriteDao: FavoriteDao
+    private val favoritesRepository: FavoritesRepository
 ) : ViewModel() {
 
-    val favorites: StateFlow<List<Artwork>> = favoriteDao.getAllFavorites()
-        .map { entities -> entities.map { it.toDomain() } }
+    val favorites: StateFlow<List<Artwork>> = favoritesRepository.getAllFavorites()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -28,7 +28,7 @@ class FavoritesViewModel @Inject constructor(
 
     fun removeFavorite(objectID: Int) {
         viewModelScope.launch {
-            favoriteDao.removeFavorite(objectID)
+            favoritesRepository.removeFavorite(objectID)
         }
     }
 }

@@ -21,7 +21,7 @@ fun SettingsScreen(
     val settingsRepo = remember { SettingsRepositoryImpl(context) }
 
     var query by remember { mutableStateOf("painting") }
-    var hasImages by remember { mutableStateOf(true) }
+    var hasImages by remember { mutableStateOf(false) }
     var isLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -61,24 +61,20 @@ fun SettingsScreen(
         ) {
             OutlinedTextField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = { viewModel.onQueryChange(it) },
                 label = { Text("Поисковый запрос (дефолт: painting)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = hasImages, onCheckedChange = { hasImages = it })
+                Switch(checked = hasImages, onCheckedChange = { viewModel.onHasImagesChange(it) })
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Только с картинками")
             }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = {
-                    viewModel.saveSettings(query, hasImages) {
-                        onApply()
-                    }
-                },
+                onClick = { viewModel.saveSettings { onApply() } },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Готово")

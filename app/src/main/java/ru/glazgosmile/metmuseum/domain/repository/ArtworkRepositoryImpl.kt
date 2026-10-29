@@ -6,20 +6,17 @@ import ru.glazgosmile.metmuseum.data.mapper.toDomain
 import ru.glazgosmile.metmuseum.data.remote.ArtworkApi
 import ru.glazgosmile.metmuseum.domain.model.Artwork
 import ru.glazgosmile.metmuseum.domain.repository.ArtworkRepository
-
+import kotlinx.coroutines.delay
 class ArtworkRepositoryImpl(
     private val api: ArtworkApi
 ) : ArtworkRepository {
 
-    override suspend fun getArtworks(query: String, limit: Int): List<Artwork> =
+    override suspend fun getArtworks(query: String, hasImages: Boolean, limit: Int): List<Artwork> =
         withContext(Dispatchers.IO) {
-            val response = api.searchArtworks(
-                query = query,
-                offset = 0,
-                limit = limit
-            )
+            val response = api.searchArtworks(query = query, hasImages = hasImages, limit = limit)
             val ids = response.objectIDs.orEmpty().take(limit)
-            ids.map { id -> api.getArtworkById(id).toDomain() }
+            ids.mapNotNull { id -> delay(300)
+                try { api.getArtworkById(id).toDomain() } catch (e: Exception) { null } }
         }
 
     override suspend fun getArtworkById(objectID: Int): Artwork =

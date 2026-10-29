@@ -7,6 +7,6 @@ import javax.inject.Inject
 class GetArtworksUseCase @Inject constructor(
     private val repository: ArtworkRepository
 ) {
-    suspend operator fun invoke(query: String = "painting", limit: Int = 20): List<Artwork> =
-        repository.getArtworks(query, limit)
+    suspend operator fun invoke(query: String, hasImages: Boolean, limit: Int = 20): List<Artwork> =
+        repository.getArtworks(query, hasImages, limit)
 }

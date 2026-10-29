@@ -3,7 +3,13 @@ package ru.glazgosmile.metmuseum.ui.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import ru.glazgosmile.metmuseum.data.local.SettingsRepositoryImpl
 import ru.glazgosmile.metmuseum.domain.usecase.GetArtworksUseCase
@@ -26,26 +32,26 @@ class ListViewModel @Inject constructor(
             combine(
                 settingsRepository.queryFlow,
                 settingsRepository.hasImagesFlow
-            ) { query, hasImages ->
-                Pair(query, hasImages)
-            }.collect { (query, hasImages) ->
-                executeSearch(query)
+            ) { q, hasImages ->
+                Pair(q, hasImages)
+            }.collect { (q, hasImages) ->
+                executeSearch(q, hasImages)
             }
         }
     }
 
-    fun search(query: String) {
+    fun search(newQuery: String) {
         viewModelScope.launch {
             val currentHasImages = settingsRepository.hasImagesFlow.first()
-            settingsRepository.saveSettings(query, currentHasImages)
+            settingsRepository.saveSettings(newQuery, currentHasImages)
         }
     }
 
-    private fun executeSearch(query: String) {
+    private fun executeSearch(query: String, hasImages: Boolean) {
         viewModelScope.launch {
             _uiState.value = ListUiState.Loading
             try {
-                val artworks = getArtworksUseCase(query = query, limit = 15)
+                val artworks = getArtworksUseCase(query = query, hasImages = hasImages, limit = 15)
                 _uiState.value = ListUiState.Success(artworks)
             } catch (e: Exception) {
                 _uiState.value = ListUiState.Error(e.message ?: "Ошибка загрузки")
@@ -54,7 +60,10 @@ class ListViewModel @Inject constructor(
     }
 
     fun retry() {
-        val currentQuery = query.value
-        executeSearch(currentQuery)
+        viewModelScope.launch {
+            val currentQuery = settingsRepository.queryFlow.first()
+            val currentHasImages = settingsRepository.hasImagesFlow.first()
+            executeSearch(currentQuery, currentHasImages)
+        }
     }
 }

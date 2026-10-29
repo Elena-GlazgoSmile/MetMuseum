@@ -11,7 +11,7 @@ interface ArtworkApi {
     @GET("public/collection/v1.1/search")
     suspend fun searchArtworks(
         @Query("q") query: String,
-        @Query("hasImages") hasImages: Boolean = true,
+        @Query("hasImages") hasImages: Boolean,
         @Query("offset") offset: Int = 0,
         @Query("limit") limit: Int = 20
     ): ObjectsResponseDto

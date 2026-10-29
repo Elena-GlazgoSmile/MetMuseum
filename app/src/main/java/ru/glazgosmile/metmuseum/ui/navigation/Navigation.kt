@@ -1,6 +1,8 @@
 package ru.glazgosmile.metmuseum.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -15,6 +17,8 @@ sealed class Screen(val route: String) {
         fun createRoute(objectID: Int) = "detail/$objectID"
     }
     data object Favorites : Screen("favorites")
+    data object Profile : Screen("profile")
+    data object EditProfile : Screen("edit")
 }
 
 data class BottomNavItem(
@@ -44,4 +48,9 @@ val bottomNavItems = listOf(
         label = "Домой",
         icon = Icons.Default.Home
     ),
+    BottomNavItem(
+        route = Screen.Profile.route,
+        label = "Профиль",
+        icon = Icons.Default.AccountCircle
+    )
 )

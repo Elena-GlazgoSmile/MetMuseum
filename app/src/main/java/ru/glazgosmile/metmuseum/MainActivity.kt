@@ -26,6 +26,8 @@ import ru.glazgosmile.metmuseum.ui.detail.DetailScreen
 import ru.glazgosmile.metmuseum.ui.list.ListScreen
 import ru.glazgosmile.metmuseum.ui.navigation.Screen
 import ru.glazgosmile.metmuseum.ui.navigation.bottomNavItems
+import ru.glazgosmile.metmuseum.ui.profile.EditProfileScreen
+import ru.glazgosmile.metmuseum.ui.profile.ProfileScreen
 import ru.glazgosmile.metmuseum.ui.theme.MetMuseumTheme
 import javax.inject.Inject
 
@@ -55,7 +57,9 @@ fun MetMuseumApp(badgeManager: BadgeManager) {
         Screen.Home.route,
         Screen.List.route,
         Screen.Favorites.route,
-        Screen.Settings.route
+        Screen.Settings.route,
+        Screen.Profile.route,
+        Screen.EditProfile.route
     )
 
     Scaffold(
@@ -129,6 +133,13 @@ fun MetMuseumApp(badgeManager: BadgeManager) {
                     objectID = objectID,
                     onBackClick = { navController.popBackStack() }
                 )
+            }
+
+            composable(Screen.Profile.route) {
+                ProfileScreen(onEditClick = { navController.navigate(Screen.EditProfile.route) })
+            }
+            composable(Screen.EditProfile.route) {
+                EditProfileScreen(onBack = { navController.popBackStack() })
             }
         }
     }

@@ -16,7 +16,9 @@ import ru.glazgosmile.metmuseum.domain.repository.ArtworkRepository
 import javax.inject.Singleton
 import ru.glazgosmile.metmuseum.data.local.SettingsRepositoryImpl
 import ru.glazgosmile.metmuseum.data.repository.FavoritesRepositoryImpl
+import ru.glazgosmile.metmuseum.data.repository.ProfileRepositoryImpl
 import ru.glazgosmile.metmuseum.domain.repository.FavoritesRepository
+import ru.glazgosmile.metmuseum.domain.repository.ProfileRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -50,6 +52,12 @@ object AppModule {
     @Singleton
     fun provideFavoritesRepository(favoriteDao: FavoriteDao): FavoritesRepository {
         return FavoritesRepositoryImpl(favoriteDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileRepository(@ApplicationContext context: Context): ProfileRepository {
+        return ProfileRepositoryImpl(context)
     }
 
     @Provides

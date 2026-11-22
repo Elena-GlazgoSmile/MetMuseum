@@ -1,0 +1,9 @@
+ru.glazgosmile.metmuseum.profile-pngs-0 D:\Programs\MetMuseum\feature\profile\build\generated\res\pngs\debug
+ru.glazgosmile.metmuseum.profile-updated_navigation_xml-1 D:\Programs\MetMuseum\feature\profile\build\generated\updated_navigation_xml\debug
+ru.glazgosmile.metmuseum.profile-mergeDebugResources-2 D:\Programs\MetMuseum\feature\profile\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+ru.glazgosmile.metmuseum.profile-mergeDebugResources-3 D:\Programs\MetMuseum\feature\profile\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+ru.glazgosmile.metmuseum.profile-debug-4 D:\Programs\MetMuseum\feature\profile\build\intermediates\merged_res\debug\mergeDebugResources
+ru.glazgosmile.metmuseum.profile-debug-5 D:\Programs\MetMuseum\feature\profile\build\intermediates\packaged_res\debug\packageDebugResources
+ru.glazgosmile.metmuseum.profile-debug-6 D:\Programs\MetMuseum\feature\profile\src\debug\res
+ru.glazgosmile.metmuseum.profile-main-7 D:\Programs\MetMuseum\feature\profile\src\main\res
+gradleHome-0 C:\Users\Elena\.gradle

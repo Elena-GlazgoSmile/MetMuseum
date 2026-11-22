@@ -1,0 +1,1 @@
+-keep,allowobfuscation,allowshrinking class ru.glazgosmile.metmuseum.ui.profile.ProfileViewModel

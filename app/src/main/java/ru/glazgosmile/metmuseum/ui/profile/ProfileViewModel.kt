@@ -1,6 +1,5 @@
 package ru.glazgosmile.metmuseum.ui.profile
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +19,13 @@ class ProfileViewModel @Inject constructor(
     val profile: StateFlow<UserProfile> = repository.profileFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserProfile())
 
-    fun updateProfile(fullName: String, position: String, resumeUrl: String, avatarBytes: ByteArray?) {
+    fun updateProfile(
+        fullName: String,
+        position: String,
+        resumeUrl: String,
+        avatarBytes: ByteArray?,
+        favoriteTime: String
+    ) {
         viewModelScope.launch {
             var avatarPath: String? = null
             if (avatarBytes != null) {
@@ -35,7 +40,8 @@ class ProfileViewModel @Inject constructor(
                     fullName = fullName,
                     position = position,
                     resumeUrl = resumeUrl,
-                    avatarPath = finalPath
+                    avatarPath = finalPath,
+                    favoriteTime = favoriteTime
                 )
             )
         }

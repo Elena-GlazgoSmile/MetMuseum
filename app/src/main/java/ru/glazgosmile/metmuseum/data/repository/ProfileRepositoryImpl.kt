@@ -23,6 +23,7 @@ class ProfileRepositoryImpl @Inject constructor(
         val RESUME_KEY = stringPreferencesKey("resume_url")
         val AVATAR_KEY = stringPreferencesKey("avatar_path")
         val POSITION_KEY = stringPreferencesKey("position")
+        val FAVORITE_TIME_KEY = stringPreferencesKey("favorite_time")
     }
 
     override val profileFlow: Flow<UserProfile> = context.profileDataStore.data.map { prefs ->
@@ -30,7 +31,8 @@ class ProfileRepositoryImpl @Inject constructor(
             fullName = prefs[NAME_KEY] ?: "",
             position = prefs[POSITION_KEY] ?: "",
             resumeUrl = prefs[RESUME_KEY] ?: "",
-            avatarPath = prefs[AVATAR_KEY]
+            avatarPath = prefs[AVATAR_KEY],
+            favoriteTime = prefs[FAVORITE_TIME_KEY] ?: ""
         )
     }
 
@@ -40,6 +42,7 @@ class ProfileRepositoryImpl @Inject constructor(
             prefs[POSITION_KEY] = profile.position
             prefs[RESUME_KEY] = profile.resumeUrl
             profile.avatarPath?.let { prefs[AVATAR_KEY] = it }
+            prefs[FAVORITE_TIME_KEY] = profile.favoriteTime
         }
     }
 

@@ -1,0 +1,24 @@
+-- Merging decision tree log ---
+manifest
+ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:2:1-6:12
+INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:2:1-6:12
+	package
+		INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:2:11-69
+application
+ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:3:5-5:19
+receiver#ru.glazgosmile.metmuseum.reminder.ReminderReceiver
+ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:9-112
+	android:exported
+		ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:85-109
+	android:name
+		ADDED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:19-84
+uses-sdk
+INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml
+INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml

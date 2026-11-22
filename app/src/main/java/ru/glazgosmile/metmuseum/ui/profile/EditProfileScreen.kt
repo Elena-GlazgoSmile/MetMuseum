@@ -1,17 +1,26 @@
 package ru.glazgosmile.metmuseum.ui.profile
 
 import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,7 +33,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import java.io.ByteArrayOutputStream
+import ru.glazgosmile.metmuseum.utils.NotificationScheduler
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
@@ -39,6 +50,9 @@ fun EditProfileScreen(
     var resumeUrl by remember { mutableStateOf("") }
     var newAvatarBytes by remember { mutableStateOf<ByteArray?>(null) }
     var previewAvatar by remember { mutableStateOf<Any?>(null) }
+    var favoriteTime by remember { mutableStateOf("") }
+    var timeError by remember { mutableStateOf<String?>(null) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(profile) {
         if (fullName.isEmpty()) fullName = profile.fullName
@@ -90,6 +104,20 @@ fun EditProfileScreen(
         }
     }
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Без уведомлений вы не узнаете о мероприятии!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,9 +129,30 @@ fun EditProfileScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.updateProfile(fullName, position, resumeUrl, newAvatarBytes)
+                        Log.d("EditProfileScreen", "Нажата галочка!")
+                        viewModel.updateProfile(fullName, position, resumeUrl, newAvatarBytes, favoriteTime)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                            if (!alarmManager.canScheduleExactAlarms()) {
+                                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                    data = Uri.parse("package:${context.packageName}")
+                                }
+                                context.startActivity(intent)
+                                return@IconButton
+                            }
+                        }
+                        if (favoriteTime.isNotBlank()) {
+                            Log.d("EditProfileScreen", "Вызываем NotificationScheduler")
+                            NotificationScheduler.schedule(
+                                context = context,
+                                timeString = favoriteTime,
+                                studentName = fullName
+                            )
+                        } else {
+                            Log.d("EditProfileScreen", "Время пустое, не ставим будильник")
+                        }
                         onBack()
-                    }) {
+                    }, enabled = timeError == null && favoriteTime.isNotBlank() ) {
                         Icon(Icons.Default.Check, contentDescription = "Сохранить")
                     }
                 }
@@ -157,6 +206,23 @@ fun EditProfileScreen(
                 label = { Text("Ссылка на резюме (PDF)") },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            OutlinedTextField(
+                value = favoriteTime,
+                onValueChange = {
+                    favoriteTime = it
+                    timeError = if (it.isNotBlank() && !isValidTime(it)) "Неверный формат (HH:mm)" else null
+                },
+                label = { Text("Время любимой пары") },
+                isError = timeError != null,
+                supportingText = { timeError?.let { Text(it) } },
+                trailingIcon = {
+                    IconButton(onClick = { showTimePicker = true }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Выбрать время")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 
@@ -194,4 +260,33 @@ fun EditProfileScreen(
             }
         )
     }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(is24Hour = true)
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    favoriteTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
+                    timeError = null
+                    showTimePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) { Text("Отмена") }
+            },
+            text = { TimePicker(state = timePickerState) }
+        )
+    }
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun isValidTime(time: String): Boolean {
+    return try {
+        java.time.LocalTime.parse(time)
+        true
+    } catch (e: Exception) {
+        false
+    }
+}
+

@@ -1,0 +1,19 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="ru.glazgosmile.metmuseum.profile" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+5-->INJECTED
+5-->INJECTED
+6
+7    <application>
+7-->D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:3:5-5:19
+8        <receiver
+8-->D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:9-112
+9            android:name="ru.glazgosmile.metmuseum.reminder.ReminderReceiver"
+9-->D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:19-84
+10            android:exported="false" />
+10-->D:\Programs\MetMuseum\feature\profile\src\main\AndroidManifest.xml:4:85-109
+11    </application>
+12
+13</manifest>
